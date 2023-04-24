@@ -18,14 +18,15 @@ try
     string choice;
     do
     {
-        Console.WriteLine("1) Display Categories");
-        Console.WriteLine("2) Add Category");
-        Console.WriteLine("3) Display Category and related products");
-        Console.WriteLine("4) Display all Categories and their related products");
-        Console.WriteLine("5) Add Product");
-        Console.WriteLine("6) Edit Product");
+        Console.WriteLine("1. Display Categories");
+        Console.WriteLine("2. Add Category");
+        Console.WriteLine("3. Display Category and related products");
+        Console.WriteLine("4. Display all Categories and their related products");
+        Console.WriteLine("5. Add Product");
+        Console.WriteLine("6. Edit Product");
         Console.WriteLine("7. Display Products");
         Console.WriteLine("8. Display Specific Product");
+        Console.WriteLine("9. Edit Category");
         Console.WriteLine("\"q\" to quit");
         choice = Console.ReadLine();
         Console.Clear();
@@ -166,7 +167,7 @@ try
         else if (choice == "6")
         {
             Console.WriteLine("Enter the Product ID you want to edit: ");
-            Product product = db.Products.FirstOrDefault(p => p.CategoryId == Convert.ToInt32(Console.ReadLine()));
+            Product product = db.Products.FirstOrDefault(p => p.ProductId == Convert.ToInt32(Console.ReadLine()));
             Console.WriteLine("What field do you want to edit?");
             Console.WriteLine("1. Product Name");
             Console.WriteLine("2. Supplier ID");
@@ -235,6 +236,7 @@ try
                     break;
 
             }
+            db.EditProduct(product);
             logger.Info("Successfully Edited");
 
         }
@@ -283,6 +285,7 @@ try
                     break;
 
             }
+            logger.Info("Records finished");
 
         }
         else if (choice == "8")
@@ -291,6 +294,26 @@ try
             Product product = db.Products.FirstOrDefault(p => p.CategoryId == Convert.ToInt32(Console.ReadLine()));
             Console.WriteLine($"ID:{product.ProductId}. {product.ProductName} - Supplier ID:{product.SupplierId} - Category ID{product.CategoryId} - Quantity:{product.QuantityPerUnit} - ${product.UnitPrice} - {product.UnitsInStock} Units - {product.UnitsOnOrder} On Order - Reorder at {product.ReorderLevel} - Discontinued? {product.Discontinued}");
             logger.Info("End of product info");
+        }
+        else if (choice == "9"){
+            Console.WriteLine("Enter the Category ID you want to edit: ");
+            Category category = db.Categories.FirstOrDefault(c => c.CategoryId == Convert.ToInt32(Console.ReadLine()));
+            Console.WriteLine("1. Edit Category Name");
+            Console.WriteLine("2. Edit Category Description");
+            int categoryChoice = Convert.ToInt32(Console.ReadLine());
+            switch (categoryChoice){
+                case 1:
+                    Console.WriteLine("Enter new category name");
+                    category.CategoryName = Console.ReadLine();
+                break;
+                case 2:
+                    Console.WriteLine("Enter new category description");
+                    category.Description = Console.ReadLine();
+                break;
+                default:
+                break;
+            }
+            db.EditCategory(category);
         }
 
 
