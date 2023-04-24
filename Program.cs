@@ -165,7 +165,7 @@ try
         }
         else if (choice == "6")
         {
-            Console.WriteLine("Enter the Product ID you want more info on: ");
+            Console.WriteLine("Enter the Product ID you want to edit: ");
             Product product = db.Products.FirstOrDefault(p => p.CategoryId == Convert.ToInt32(Console.ReadLine()));
             Console.WriteLine("What field do you want to edit?");
             Console.WriteLine("1. Product Name");
@@ -235,10 +235,54 @@ try
                     break;
 
             }
+            logger.Info("Successfully Edited");
 
         }
         else if (choice == "7")
         {
+            Console.WriteLine("1. Display All Products");
+            Console.WriteLine("2. Display Discontinued Products");
+            Console.WriteLine("3. Display Active Products");
+            int productChoice = Convert.ToInt32(Console.ReadLine());
+            switch (productChoice)
+            {
+                case 1:
+                    var query = db.Products.OrderBy(p => p.ProductId);
+                    Console.ForegroundColor = ConsoleColor.Green;
+                    Console.WriteLine($"{query.Count()} records returned");
+                    Console.ForegroundColor = ConsoleColor.Blue;
+                    foreach (var item in query)
+                    {
+                        Console.WriteLine($"{item.ProductId}. {item.ProductName} - Discontinued? {item.Discontinued}");
+                    }
+                    Console.ForegroundColor = ConsoleColor.White;
+                    break;
+                case 2:
+                    var query2 = db.Products.Where(p => p.Discontinued == true).OrderBy(p => p.ProductId);
+                    Console.ForegroundColor = ConsoleColor.Green;
+                    Console.WriteLine($"{query2.Count()} records returned");
+                    Console.ForegroundColor = ConsoleColor.Blue;
+                    foreach (var item in query2)
+                    {
+                        Console.WriteLine($"{item.ProductId}. {item.ProductName} - Discontinued? {item.Discontinued}");
+                    }
+                    Console.ForegroundColor = ConsoleColor.White;
+                    break;
+                case 3:
+                    var query3 = db.Products.Where(p => p.Discontinued != true).OrderBy(p => p.ProductId);
+                    Console.ForegroundColor = ConsoleColor.Green;
+                    Console.WriteLine($"{query3.Count()} records returned");
+                    Console.ForegroundColor = ConsoleColor.Blue;
+                    foreach (var item in query3)
+                    {
+                        Console.WriteLine($"{item.ProductId}. {item.ProductName} - Discontinued? {item.Discontinued}");
+                    }
+                    Console.ForegroundColor = ConsoleColor.White;
+                    break;
+                default:
+                    break;
+
+            }
 
         }
         else if (choice == "8")
@@ -246,6 +290,7 @@ try
             Console.WriteLine("Enter the Product ID you want more info on: ");
             Product product = db.Products.FirstOrDefault(p => p.CategoryId == Convert.ToInt32(Console.ReadLine()));
             Console.WriteLine($"ID:{product.ProductId}. {product.ProductName} - Supplier ID:{product.SupplierId} - Category ID{product.CategoryId} - Quantity:{product.QuantityPerUnit} - ${product.UnitPrice} - {product.UnitsInStock} Units - {product.UnitsOnOrder} On Order - Reorder at {product.ReorderLevel} - Discontinued? {product.Discontinued}");
+            logger.Info("End of product info");
         }
 
 
@@ -276,18 +321,3 @@ static void displayCategories()
     Console.ForegroundColor = ConsoleColor.White;
 }
 
-static void displayProducts()
-{
-    var db = new NWContext();
-
-    var query = db.Products.OrderBy(p => p.ProductId);
-    Console.ForegroundColor = ConsoleColor.Green;
-    Console.WriteLine($"{query.Count()} records returned");
-    Console.ForegroundColor = ConsoleColor.Blue;
-    foreach (var item in query)
-    {
-        Console.WriteLine($"{item.ProductId}. {item.ProductName}");
-    }
-    Console.ForegroundColor = ConsoleColor.White;
-
-}
