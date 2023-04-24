@@ -6,7 +6,7 @@ using System.ComponentModel.DataAnnotations;
 using Microsoft.EntityFrameworkCore;
 
 // See https://aka.ms/new-console-template for more information
-string path = Directory.GetCurrentDirectory() + "\\nlog.config";
+string path = Directory.GetCurrentDirectory() + "//nlog.config";
 
 // create instance of Logger
 var logger = LogManager.LoadConfiguration(path).GetCurrentClassLogger();
@@ -22,22 +22,14 @@ try
         Console.WriteLine("2) Add Category");
         Console.WriteLine("3) Display Category and related products");
         Console.WriteLine("4) Display all Categories and their related products");
+        Console.WriteLine("5) Add Product");
         Console.WriteLine("\"q\" to quit");
         choice = Console.ReadLine();
         Console.Clear();
         logger.Info($"Option {choice} selected");
         if (choice == "1")
         {
-            var query = db.Categories.OrderBy(p => p.CategoryName);
-
-            Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine($"{query.Count()} records returned");
-            Console.ForegroundColor = ConsoleColor.Magenta;
-            foreach (var item in query)
-            {
-                Console.WriteLine($"{item.CategoryName} - {item.Description}");
-            }
-            Console.ForegroundColor = ConsoleColor.White;
+            displayCategories();
         }
         else if (choice == "2")
         {
@@ -62,7 +54,7 @@ try
                 else
                 {
                     logger.Info("Validation passed");
-                    // TODO: save category to db
+                    db.AddCategory(category);
                 }
             }
             if (!isValid)
@@ -106,6 +98,59 @@ try
                 }
             }
         }
+        else if (choice == "5")
+        {
+            Product product = new Product();
+            Console.WriteLine("Enter new product name:");
+            product.ProductName = Console.ReadLine();
+            displayCategories();
+            Console.WriteLine("Enter category ID:");
+            int categoryID = Convert.ToInt32(Console.ReadLine());
+            var categoryQuery = db.Categories.OrderBy(p => p.CategoryName);
+            try
+            {
+                if (categoryID > categoryQuery.Count())
+                {
+                    throw new InvalidCastException();
+                }
+            }
+            catch (Exception e)
+            {
+                logger.Error(e);
+            }
+            product.CategoryId = categoryID;
+            Console.WriteLine("Enter unit price:");
+            product.UnitPrice = Convert.ToDecimal(Console.ReadLine());
+            //TODO: add more fields for the product
+
+            ValidationContext context = new ValidationContext(product, null, null);
+            List<ValidationResult> results = new List<ValidationResult>();
+
+            var isValid = Validator.TryValidateObject(product, context, results, true);
+            if (isValid)
+            {
+                // check for unique name
+                if (db.Products.Any(p => p.ProductName == product.ProductName))
+                {
+                    // generate validation error
+                    isValid = false;
+                    results.Add(new ValidationResult("Name exists", new string[] { "ProductName" }));
+                }
+                else
+                {
+                    logger.Info("Validation passed");
+                    db.AddProduct(product);
+                }
+            }
+            if (!isValid)
+            {
+                foreach (var result in results)
+                {
+                    logger.Error($"{result.MemberNames.First()} : {result.ErrorMessage}");
+                }
+            }
+
+        }
         Console.WriteLine();
     } while (choice.ToLower() != "q");
 }
@@ -115,3 +160,20 @@ catch (Exception ex)
 }
 
 logger.Info("Program ended");
+
+static void displayCategories()
+{
+    var db = new NWContext();
+
+
+    var query = db.Categories.OrderBy(p => p.CategoryId);
+
+    Console.ForegroundColor = ConsoleColor.Green;
+    Console.WriteLine($"{query.Count()} records returned");
+    Console.ForegroundColor = ConsoleColor.Magenta;
+    foreach (var item in query)
+    {
+        Console.WriteLine($"{item.CategoryId}. {item.CategoryName} - {item.Description}");
+    }
+    Console.ForegroundColor = ConsoleColor.White;
+}

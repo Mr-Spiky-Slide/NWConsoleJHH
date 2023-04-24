@@ -29,6 +29,16 @@ namespace NWConsole.Model
         public virtual DbSet<Supplier> Suppliers { get; set; }
         public virtual DbSet<Territory> Territories { get; set; }
 
+        public void AddCategory(Category category){
+            this.Categories.Add(category);
+            this.SaveChanges();
+        }
+
+        public void AddProduct(Product product){
+            this.Products.Add(product);
+            this.SaveChanges();
+        }
+
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             if (!optionsBuilder.IsConfigured)
