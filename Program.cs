@@ -93,7 +93,7 @@ try
             logger.Info($"CategoryId {id} selected");
             Category category = db.Categories.Include("Products").FirstOrDefault(c => c.CategoryId == id);
             Console.WriteLine($"{category.CategoryName} - {category.Description}");
-            foreach (Product p in category.Products)
+            foreach (Product p in category.Products.Where(p => p.Discontinued != true))
             {
                 Console.WriteLine($"\t{p.ProductName}");
             }
