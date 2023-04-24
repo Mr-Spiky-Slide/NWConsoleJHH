@@ -23,13 +23,25 @@ try
         Console.WriteLine("3) Display Category and related products");
         Console.WriteLine("4) Display all Categories and their related products");
         Console.WriteLine("5) Add Product");
+        Console.WriteLine("6) Edit Product");
+        Console.WriteLine("7. Display Products");
+        Console.WriteLine("8. Display Specific Product");
         Console.WriteLine("\"q\" to quit");
         choice = Console.ReadLine();
         Console.Clear();
         logger.Info($"Option {choice} selected");
         if (choice == "1")
         {
-            displayCategories();
+            var query = db.Categories.OrderBy(c => c.CategoryId);
+
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.WriteLine($"{query.Count()} records returned");
+            Console.ForegroundColor = ConsoleColor.Magenta;
+            foreach (var item in query)
+            {
+                Console.WriteLine($"{item.CategoryName} - {item.Description}");
+            }
+            Console.ForegroundColor = ConsoleColor.White;
         }
         else if (choice == "2")
         {
@@ -151,6 +163,92 @@ try
             }
 
         }
+        else if (choice == "6")
+        {
+            Console.WriteLine("Enter the Product ID you want more info on: ");
+            Product product = db.Products.FirstOrDefault(p => p.CategoryId == Convert.ToInt32(Console.ReadLine()));
+            Console.WriteLine("What field do you want to edit?");
+            Console.WriteLine("1. Product Name");
+            Console.WriteLine("2. Supplier ID");
+            Console.WriteLine("3. Category ID");
+            Console.WriteLine("4. Quantity Per Unit");
+            Console.WriteLine("5. Unit Price");
+            Console.WriteLine("6. Units In Stock");
+            Console.WriteLine("7. Units On Order");
+            Console.WriteLine("8. Reorder Level");
+            Console.WriteLine("9. Discontinued");
+            int fieldChoice = Convert.ToInt32(Console.ReadLine());
+
+            switch (fieldChoice)
+            {
+                case 1:
+                    Console.WriteLine("Enter new product name:");
+                    product.ProductName = Console.ReadLine();
+                    break;
+                case 2:
+                    displayCategories();
+                    Console.WriteLine("Enter category ID:");
+                    int categoryID = Convert.ToInt32(Console.ReadLine());
+                    var categoryQuery = db.Categories.OrderBy(p => p.CategoryName);
+                    try
+                    {
+                        if (categoryID > categoryQuery.Count())
+                        {
+                            throw new InvalidCastException();
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        logger.Error(e);
+                    }
+                    product.CategoryId = categoryID;
+                    break;
+                case 3:
+                    Console.WriteLine("Enter unit price:");
+                    product.UnitPrice = Convert.ToDecimal(Console.ReadLine());
+                    break;
+                case 4:
+                    Console.WriteLine("Enter supplier ID:");
+                    product.SupplierId = Convert.ToInt32(Console.ReadLine());
+                    break;
+                case 5:
+                    Console.WriteLine("Enter Quantity Per Unit:");
+                    product.QuantityPerUnit = (Console.ReadLine());
+                    break;
+                case 6:
+                    Console.WriteLine("Enter Units in Stock:");
+                    product.UnitsInStock = Convert.ToInt16(Console.ReadLine());
+                    break;
+                case 7:
+                    Console.WriteLine("Enter Units on Order:");
+                    product.UnitsOnOrder = Convert.ToInt16(Console.ReadLine());
+                    break;
+                case 8:
+                    Console.WriteLine("Enter reorder level:");
+                    product.ReorderLevel = Convert.ToInt16(Console.ReadLine());
+                    break;
+                case 9:
+                    product.Discontinued = !product.Discontinued;
+                    break;
+
+                default:
+                    break;
+
+            }
+
+        }
+        else if (choice == "7")
+        {
+
+        }
+        else if (choice == "8")
+        {
+            Console.WriteLine("Enter the Product ID you want more info on: ");
+            Product product = db.Products.FirstOrDefault(p => p.CategoryId == Convert.ToInt32(Console.ReadLine()));
+            Console.WriteLine($"ID:{product.ProductId}. {product.ProductName} - Supplier ID:{product.SupplierId} - Category ID{product.CategoryId} - Quantity:{product.QuantityPerUnit} - ${product.UnitPrice} - {product.UnitsInStock} Units - {product.UnitsOnOrder} On Order - Reorder at {product.ReorderLevel} - Discontinued? {product.Discontinued}");
+        }
+
+
         Console.WriteLine();
     } while (choice.ToLower() != "q");
 }
@@ -166,7 +264,7 @@ static void displayCategories()
     var db = new NWContext();
 
 
-    var query = db.Categories.OrderBy(p => p.CategoryId);
+    var query = db.Categories.OrderBy(c => c.CategoryId);
 
     Console.ForegroundColor = ConsoleColor.Green;
     Console.WriteLine($"{query.Count()} records returned");
@@ -176,4 +274,20 @@ static void displayCategories()
         Console.WriteLine($"{item.CategoryId}. {item.CategoryName} - {item.Description}");
     }
     Console.ForegroundColor = ConsoleColor.White;
+}
+
+static void displayProducts()
+{
+    var db = new NWContext();
+
+    var query = db.Products.OrderBy(p => p.ProductId);
+    Console.ForegroundColor = ConsoleColor.Green;
+    Console.WriteLine($"{query.Count()} records returned");
+    Console.ForegroundColor = ConsoleColor.Blue;
+    foreach (var item in query)
+    {
+        Console.WriteLine($"{item.ProductId}. {item.ProductName}");
+    }
+    Console.ForegroundColor = ConsoleColor.White;
+
 }
