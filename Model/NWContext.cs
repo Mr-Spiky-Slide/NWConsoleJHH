@@ -40,6 +40,12 @@ namespace NWConsole.Model
             this.SaveChanges();
         }
 
+        public void DeleteCategory(Category selectedCategory){
+            Category category = this.Categories.Find(selectedCategory.CategoryId);
+            this.Categories.Remove(category);
+            this.SaveChanges();
+        }
+
         public void AddProduct(Product product){
             this.Products.Add(product);
             this.SaveChanges();
@@ -56,6 +62,12 @@ namespace NWConsole.Model
             product.UnitsOnOrder = editedProduct.UnitsOnOrder;
             product.ReorderLevel = editedProduct.ReorderLevel;
             product.Discontinued = editedProduct.Discontinued;
+            this.SaveChanges();
+        }
+
+        public void DeleteProduct(Product selectedProduct){
+            Product product = this.Products.Find(selectedProduct.ProductId);
+            this.Products.Remove(product);
             this.SaveChanges();
         }
 

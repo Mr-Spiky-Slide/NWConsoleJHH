@@ -18,15 +18,17 @@ try
     string choice;
     do
     {
-        Console.WriteLine("1. Display Categories");
-        Console.WriteLine("2. Add Category");
-        Console.WriteLine("3. Display Category and related products");
-        Console.WriteLine("4. Display all Categories and their related products");
-        Console.WriteLine("5. Add Product");
-        Console.WriteLine("6. Edit Product");
-        Console.WriteLine("7. Display Products");
-        Console.WriteLine("8. Display Specific Product");
-        Console.WriteLine("9. Edit Category");
+        Console.WriteLine("1.  Display Categories");
+        Console.WriteLine("2.  Add Category");
+        Console.WriteLine("3.  Display Category and related products");
+        Console.WriteLine("4.  Display all Categories and their related products");
+        Console.WriteLine("5.  Add Product");
+        Console.WriteLine("6.  Edit Product");
+        Console.WriteLine("7.  Display Products");
+        Console.WriteLine("8.  Display Specific Product");
+        Console.WriteLine("9.  Edit Category");
+        Console.WriteLine("10. Delete Category");
+        Console.WriteLine("11. Delete Product");
         Console.WriteLine("\"q\" to quit");
         choice = Console.ReadLine();
         Console.Clear();
@@ -43,6 +45,7 @@ try
                 Console.WriteLine($"{item.CategoryName} - {item.Description}");
             }
             Console.ForegroundColor = ConsoleColor.White;
+            logger.Info("End of data");
         }
         else if (choice == "2")
         {
@@ -68,6 +71,7 @@ try
                 {
                     logger.Info("Validation passed");
                     db.AddCategory(category);
+                    logger.Info("Category added successfully");
                 }
             }
             if (!isValid)
@@ -98,6 +102,7 @@ try
             {
                 Console.WriteLine($"\t{p.ProductName}");
             }
+            logger.Info("End of data");
         }
         else if (choice == "4")
         {
@@ -110,6 +115,7 @@ try
                     Console.WriteLine($"\t{p.ProductName}");
                 }
             }
+            logger.Info("End of data");
         }
         else if (choice == "5")
         {
@@ -134,7 +140,6 @@ try
             product.CategoryId = categoryID;
             Console.WriteLine("Enter unit price:");
             product.UnitPrice = Convert.ToDecimal(Console.ReadLine());
-            //TODO: add more fields for the product
 
             ValidationContext context = new ValidationContext(product, null, null);
             List<ValidationResult> results = new List<ValidationResult>();
@@ -153,6 +158,7 @@ try
                 {
                     logger.Info("Validation passed");
                     db.AddProduct(product);
+                    logger.Info("Successfully added");
                 }
             }
             if (!isValid)
@@ -184,11 +190,14 @@ try
             {
                 case 1:
                     Console.WriteLine("Enter new product name:");
+                    //TODO: Dont allow repeat names
                     product.ProductName = Console.ReadLine();
                     break;
                 case 2:
                     displayCategories();
                     Console.WriteLine("Enter category ID:");
+                    //TODO: Add the thing where you have to enter existing ID
+
                     int categoryID = Convert.ToInt32(Console.ReadLine());
                     var categoryQuery = db.Categories.OrderBy(p => p.CategoryName);
                     try
@@ -291,6 +300,7 @@ try
         else if (choice == "8")
         {
             Console.WriteLine("Enter the Product ID you want more info on: ");
+            //TODO: Add the thing where you have to enter existing ID
             Product product = db.Products.FirstOrDefault(p => p.CategoryId == Convert.ToInt32(Console.ReadLine()));
             Console.WriteLine($"ID:{product.ProductId}. {product.ProductName} - Supplier ID:{product.SupplierId} - Category ID{product.CategoryId} - Quantity:{product.QuantityPerUnit} - ${product.UnitPrice} - {product.UnitsInStock} Units - {product.UnitsOnOrder} On Order - Reorder at {product.ReorderLevel} - Discontinued? {product.Discontinued}");
             logger.Info("End of product info");
@@ -314,6 +324,37 @@ try
                 break;
             }
             db.EditCategory(category);
+            logger.Info("Category successfully edited");
+        }
+        else if (choice == "10"){
+            var query = db.Categories.OrderBy(c => c.CategoryId);
+            displayCategories();
+            Console.WriteLine("Select the category you would like to delete: ");
+            int deleteChoice = Convert.ToInt32(Console.ReadLine());
+            Category category = db.Categories.FirstOrDefault(c => c.CategoryId == deleteChoice);
+
+            var productQuery = db.Products.Where(p => p.CategoryId == deleteChoice);
+            if (productQuery.Count() == 0){
+                db.DeleteCategory(category);
+            }
+            else{
+                Console.WriteLine("The category you are about to delete will create orphaned products. \n Are you sure you want to delete this category and its dependants? (enter y to delete)");
+                string areYouSure = Console.ReadLine().ToUpper();
+                if(areYouSure == "Y"){
+                    foreach(Product product in productQuery){
+                        db.DeleteProduct(product);
+                    }
+                    db.DeleteCategory(category);
+                    logger.Info("Category and dependents successfully delted.");
+                }
+                else{
+                    break;
+                }
+                
+            }
+        }
+        else if (choice == "11"){
+
         }
 
 
