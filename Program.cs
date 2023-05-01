@@ -309,10 +309,10 @@ try
         else if (choice == "8")
         {
             Console.WriteLine("Enter the Product ID you want more info on: ");
-            //FIX: Can only do one digit product IDs
             try
             {
-                Product product = db.Products.FirstOrDefault(p => p.CategoryId == Convert.ToInt32(Console.ReadLine()));
+                int selection = Convert.ToInt32(Console.ReadLine());
+                Product product = db.Products.FirstOrDefault(p => p.ProductId == selection);
                 Console.WriteLine($"ID:{product.ProductId}. {product.ProductName} - Supplier ID:{product.SupplierId} - Category ID{product.CategoryId} - Quantity:{product.QuantityPerUnit} - ${product.UnitPrice} - {product.UnitsInStock} Units - {product.UnitsOnOrder} On Order - Reorder at {product.ReorderLevel} - Discontinued? {product.Discontinued}");
                 logger.Info("End of product info");
 
