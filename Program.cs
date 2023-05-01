@@ -8,13 +8,15 @@ using Microsoft.EntityFrameworkCore;
 // See https://aka.ms/new-console-template for more information
 string path = Directory.GetCurrentDirectory() + "//nlog.config";
 
+var db = new NWContext();
+
 // create instance of Logger
 var logger = LogManager.LoadConfiguration(path).GetCurrentClassLogger();
 logger.Info("Program started");
 
 try
 {
-    var db = new NWContext();
+
     string choice;
     do
     {
@@ -122,7 +124,7 @@ try
             Product product = new Product();
             Console.WriteLine("Enter new product name:");
             product.ProductName = Console.ReadLine();
-            displayCategories();
+            displayCategories(db);
             Console.WriteLine("Enter category ID:");
             int categoryID = Convert.ToInt32(Console.ReadLine());
             var categoryQuery = db.Categories.OrderBy(p => p.CategoryName);
@@ -190,12 +192,20 @@ try
             {
                 case 1:
                     Console.WriteLine("Enter new product name:");
-                    //TODO: Dont allow repeat names
+                    string name = Console.ReadLine();
+                    if (db.Products.Any(p => p.ProductName == name))
+                    {
+                        Console.WriteLine("No repeat product names allowed");
+                        break;
+                    }
+                    else
+                    {
+                        product.ProductName = name;
+                        break;
+                    }
 
-                    product.ProductName = Console.ReadLine();
-                    break;
                 case 2:
-                    displayCategories();
+                    displayCategories(db);
                     Console.WriteLine("Enter category ID:");
                     int categoryID = Convert.ToInt32(Console.ReadLine());
                     var categoryQuery = db.Categories.OrderBy(p => p.CategoryName);
@@ -299,6 +309,7 @@ try
         else if (choice == "8")
         {
             Console.WriteLine("Enter the Product ID you want more info on: ");
+            //FIX: Can only do one digit product IDs
             try
             {
                 Product product = db.Products.FirstOrDefault(p => p.CategoryId == Convert.ToInt32(Console.ReadLine()));
@@ -326,9 +337,17 @@ try
                 {
                     case 1:
                         Console.WriteLine("Enter new category name");
-                        //TODO: Disallow repeat names
-                        category.CategoryName = Console.ReadLine();
-                        break;
+                        string name = Console.ReadLine();
+                        if (db.Categories.Any(c => c.CategoryName == name))
+                        {
+                            Console.WriteLine("No repeat category names allowed");
+                            break;
+                        }
+                        else
+                        {
+                            category.CategoryName = name;
+                            break;
+                        }
                     case 2:
                         Console.WriteLine("Enter new category description");
                         category.Description = Console.ReadLine();
@@ -348,7 +367,7 @@ try
         else if (choice == "10")
         {
             var query = db.Categories.OrderBy(c => c.CategoryId);
-            displayCategories();
+            displayCategories(db);
             Console.WriteLine("Select the category you would like to delete: ");
             int deleteChoice = Convert.ToInt32(Console.ReadLine());
             Category category = db.Categories.FirstOrDefault(c => c.CategoryId == deleteChoice);
@@ -366,13 +385,13 @@ try
                 {
                     foreach (Product product in productQuery)
                     {
-                        DeleteProductDependents(product);
+                        DeleteProductDependents(product, db);
 
                     }
                     db.DeleteCategory(category);
                     logger.Info("Category and dependents successfully delted.");
                 }
-                
+
 
             }
         }
@@ -381,7 +400,7 @@ try
             Console.WriteLine("Enter the ID of the product you want to delete: ");
             int deleteChoice = Convert.ToInt32(Console.ReadLine());
             Product product = db.Products.FirstOrDefault(c => c.ProductId == deleteChoice);
-            DeleteProductDependents(product);
+            DeleteProductDependents(product, db);
             logger.Info("Product and dependents successfully delted.");
         }
 
@@ -395,9 +414,9 @@ catch (Exception ex)
 
 logger.Info("Program ended");
 
-static void displayCategories()
+static void displayCategories(NWContext db)
 {
-    var db = new NWContext();
+   
 
 
     var query = db.Categories.OrderBy(c => c.CategoryId);
@@ -411,39 +430,31 @@ static void displayCategories()
     }
     Console.ForegroundColor = ConsoleColor.White;
 }
-static void DeleteProductDependents(Product product){
-        var db = new NWContext();
+static void DeleteProductDependents(Product product, NWContext db)
+{
+    
 
     var orderDetailsQuery = db.OrderDetails.Where(p => p.ProductId == product.ProductId);
-            if (orderDetailsQuery.Count() == 0)
+    if (orderDetailsQuery.Count() == 0)
+    {
+        db.DeleteProduct(product);
+    }
+    else
+    {
+        Console.WriteLine("The product you are about to delete will create orphaned order details. \n Are you sure you want to delete this category and its dependants? (enter y to delete)");
+        string areYouSure = Console.ReadLine().ToUpper();
+        if (areYouSure == "Y")
+        {
+            foreach (OrderDetail orderDetail in orderDetailsQuery)
             {
-                db.DeleteProduct(product);
-            }
-            else
-            {
-                Console.WriteLine("The product you are about to delete will create orphaned order details. \n Are you sure you want to delete this category and its dependants? (enter y to delete)");
-                string areYouSure = Console.ReadLine().ToUpper();
-                if (areYouSure == "Y")
-                {
-                    foreach (OrderDetail orderDetail in orderDetailsQuery)
-                    {
-                        db.DeleteOrderDetail(orderDetail);
+                db.DeleteOrderDetail(orderDetail);
 
-                    }
-                    db.DeleteProduct(product);
-                    
-                }
-               
             }
+            db.DeleteProduct(product);
+
+        }
+
+    }
 }
 
-static int countCategories()
-{
-    var db = new NWContext();
-
-
-    var query = db.Categories.OrderBy(c => c.CategoryId);
-
-    return query.Count();
-}
 
