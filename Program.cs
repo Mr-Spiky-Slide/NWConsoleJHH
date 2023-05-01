@@ -105,7 +105,7 @@ try
             foreach (var item in query)
             {
                 Console.WriteLine($"{item.CategoryName}");
-                foreach (Product p in item.Products)
+                foreach (Product p in item.Products.Where(p => p.Discontinued != true))
                 {
                     Console.WriteLine($"\t{p.ProductName}");
                 }
