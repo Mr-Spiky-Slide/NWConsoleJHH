@@ -71,6 +71,12 @@ namespace NWConsole.Model
             this.SaveChanges();
         }
 
+        public void DeleteOrderDetail(OrderDetail selectedOrderDetail){
+            OrderDetail orderDetail = this.OrderDetails.Find(selectedOrderDetail.OrderDetailsId);
+            this.OrderDetails.Remove(orderDetail);
+            this.SaveChanges();
+        }
+
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             if (!optionsBuilder.IsConfigured)

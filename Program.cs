@@ -191,13 +191,12 @@ try
                 case 1:
                     Console.WriteLine("Enter new product name:");
                     //TODO: Dont allow repeat names
+
                     product.ProductName = Console.ReadLine();
                     break;
                 case 2:
                     displayCategories();
                     Console.WriteLine("Enter category ID:");
-                    //TODO: Add the thing where you have to enter existing ID
-
                     int categoryID = Convert.ToInt32(Console.ReadLine());
                     var categoryQuery = db.Categories.OrderBy(p => p.CategoryName);
                     try
@@ -300,33 +299,54 @@ try
         else if (choice == "8")
         {
             Console.WriteLine("Enter the Product ID you want more info on: ");
-            //TODO: Add the thing where you have to enter existing ID
-            Product product = db.Products.FirstOrDefault(p => p.CategoryId == Convert.ToInt32(Console.ReadLine()));
-            Console.WriteLine($"ID:{product.ProductId}. {product.ProductName} - Supplier ID:{product.SupplierId} - Category ID{product.CategoryId} - Quantity:{product.QuantityPerUnit} - ${product.UnitPrice} - {product.UnitsInStock} Units - {product.UnitsOnOrder} On Order - Reorder at {product.ReorderLevel} - Discontinued? {product.Discontinued}");
-            logger.Info("End of product info");
-        }
-        else if (choice == "9"){
-            Console.WriteLine("Enter the Category ID you want to edit: ");
-            Category category = db.Categories.FirstOrDefault(c => c.CategoryId == Convert.ToInt32(Console.ReadLine()));
-            Console.WriteLine("1. Edit Category Name");
-            Console.WriteLine("2. Edit Category Description");
-            int categoryChoice = Convert.ToInt32(Console.ReadLine());
-            switch (categoryChoice){
-                case 1:
-                    Console.WriteLine("Enter new category name");
-                    category.CategoryName = Console.ReadLine();
-                break;
-                case 2:
-                    Console.WriteLine("Enter new category description");
-                    category.Description = Console.ReadLine();
-                break;
-                default:
+            try
+            {
+                Product product = db.Products.FirstOrDefault(p => p.CategoryId == Convert.ToInt32(Console.ReadLine()));
+                Console.WriteLine($"ID:{product.ProductId}. {product.ProductName} - Supplier ID:{product.SupplierId} - Category ID{product.CategoryId} - Quantity:{product.QuantityPerUnit} - ${product.UnitPrice} - {product.UnitsInStock} Units - {product.UnitsOnOrder} On Order - Reorder at {product.ReorderLevel} - Discontinued? {product.Discontinued}");
+                logger.Info("End of product info");
+
+            }
+            catch (Exception e)
+            {
+                logger.Error(e.Message);
                 break;
             }
-            db.EditCategory(category);
-            logger.Info("Category successfully edited");
+
         }
-        else if (choice == "10"){
+        else if (choice == "9")
+        {
+            try
+            {
+                Console.WriteLine("Enter the Category ID you want to edit: ");
+                Category category = db.Categories.FirstOrDefault(c => c.CategoryId == Convert.ToInt32(Console.ReadLine()));
+                Console.WriteLine("1. Edit Category Name");
+                Console.WriteLine("2. Edit Category Description");
+                int categoryChoice = Convert.ToInt32(Console.ReadLine());
+                switch (categoryChoice)
+                {
+                    case 1:
+                        Console.WriteLine("Enter new category name");
+                        //TODO: Disallow repeat names
+                        category.CategoryName = Console.ReadLine();
+                        break;
+                    case 2:
+                        Console.WriteLine("Enter new category description");
+                        category.Description = Console.ReadLine();
+                        break;
+                    default:
+                        break;
+                }
+                db.EditCategory(category);
+                logger.Info("Category successfully edited");
+            }
+            catch (Exception e)
+            {
+                logger.Error(e);
+            }
+
+        }
+        else if (choice == "10")
+        {
             var query = db.Categories.OrderBy(c => c.CategoryId);
             displayCategories();
             Console.WriteLine("Select the category you would like to delete: ");
@@ -334,29 +354,36 @@ try
             Category category = db.Categories.FirstOrDefault(c => c.CategoryId == deleteChoice);
 
             var productQuery = db.Products.Where(p => p.CategoryId == deleteChoice);
-            if (productQuery.Count() == 0){
+            if (productQuery.Count() == 0)
+            {
                 db.DeleteCategory(category);
             }
-            else{
+            else
+            {
                 Console.WriteLine("The category you are about to delete will create orphaned products. \n Are you sure you want to delete this category and its dependants? (enter y to delete)");
                 string areYouSure = Console.ReadLine().ToUpper();
-                if(areYouSure == "Y"){
-                    foreach(Product product in productQuery){
-                        db.DeleteProduct(product);
+                if (areYouSure == "Y")
+                {
+                    foreach (Product product in productQuery)
+                    {
+                        DeleteProductDependents(product);
+
                     }
                     db.DeleteCategory(category);
                     logger.Info("Category and dependents successfully delted.");
                 }
-                else{
-                    break;
-                }
                 
+
             }
         }
-        else if (choice == "11"){
-
+        else if (choice == "11")
+        {
+            Console.WriteLine("Enter the ID of the product you want to delete: ");
+            int deleteChoice = Convert.ToInt32(Console.ReadLine());
+            Product product = db.Products.FirstOrDefault(c => c.ProductId == deleteChoice);
+            DeleteProductDependents(product);
+            logger.Info("Product and dependents successfully delted.");
         }
-
 
         Console.WriteLine();
     } while (choice.ToLower() != "q");
@@ -383,5 +410,40 @@ static void displayCategories()
         Console.WriteLine($"{item.CategoryId}. {item.CategoryName} - {item.Description}");
     }
     Console.ForegroundColor = ConsoleColor.White;
+}
+static void DeleteProductDependents(Product product){
+        var db = new NWContext();
+
+    var orderDetailsQuery = db.OrderDetails.Where(p => p.ProductId == product.ProductId);
+            if (orderDetailsQuery.Count() == 0)
+            {
+                db.DeleteProduct(product);
+            }
+            else
+            {
+                Console.WriteLine("The product you are about to delete will create orphaned order details. \n Are you sure you want to delete this category and its dependants? (enter y to delete)");
+                string areYouSure = Console.ReadLine().ToUpper();
+                if (areYouSure == "Y")
+                {
+                    foreach (OrderDetail orderDetail in orderDetailsQuery)
+                    {
+                        db.DeleteOrderDetail(orderDetail);
+
+                    }
+                    db.DeleteProduct(product);
+                    
+                }
+               
+            }
+}
+
+static int countCategories()
+{
+    var db = new NWContext();
+
+
+    var query = db.Categories.OrderBy(c => c.CategoryId);
+
+    return query.Count();
 }
 
