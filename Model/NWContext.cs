@@ -38,8 +38,8 @@ namespace NWConsole.Model
             category.CategoryName = editedCategory.CategoryName;
             category.Description = editedCategory.Description;
             this.SaveChanges();
-        }
-
+        } 
+ 
         public void DeleteCategory(Category selectedCategory){
             Category category = this.Categories.Find(selectedCategory.CategoryId);
             this.Categories.Remove(category);

@@ -14,7 +14,7 @@ var db = new NWContext();
 var logger = LogManager.LoadConfiguration(path).GetCurrentClassLogger();
 logger.Info("Program started");
 
-try
+try 
 {
 
     string choice;
